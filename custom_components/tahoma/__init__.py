@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import timedelta
 import logging
 
-from aiohttp import ClientError, ServerDisconnectedError
+from aiohttp import CookieJar, ClientError, ServerDisconnectedError
 from pyhoma.client import TahomaClient
 from pyhoma.exceptions import BadCredentialsException, TooManyRequestsException
 from pyhoma.models import Command
@@ -196,6 +196,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    hass.data[DOMAIN][entry.entry_id]["update_listener"]()
+    hass.data[DOMAIN][entry.entry_id]["task_refresh_state"]()
     entities_per_platform = hass.data[DOMAIN][entry.entry_id]["entities"]
 
     unload_ok = all(
