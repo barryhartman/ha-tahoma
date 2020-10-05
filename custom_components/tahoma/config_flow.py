@@ -1,5 +1,4 @@
 """Config flow for TaHoma integration."""
-from asyncio import TimeoutError
 import logging
 
 from aiohttp import ClientError
@@ -17,10 +16,10 @@ from .const import (
     CONF_UPDATE_INTERVAL,
     DEFAULT_REFRESH_STATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
     MIN_REFRESH_STATE_INTERVAL,
     MIN_UPDATE_INTERVAL,
 )
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

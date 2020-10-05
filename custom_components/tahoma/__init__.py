@@ -203,9 +203,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-
-    hass.data[DOMAIN][entry.entry_id]["update_listener"]()
-    hass.data[DOMAIN][entry.entry_id]["task_refresh_state"]()
     entities_per_platform = hass.data[DOMAIN][entry.entry_id]["entities"]
 
     unload_ok = all(
@@ -218,6 +215,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id]["update_listener"]()
+        hass.data[DOMAIN][entry.entry_id]["task_refresh_state"]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

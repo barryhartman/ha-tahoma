@@ -58,10 +58,10 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch TaHoma data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except BadCredentialsException:
-            raise UpdateFailed("invalid_auth")
-        except TooManyRequestsException:
-            raise UpdateFailed("too_many_requests")
+        except BadCredentialsException as exception:
+            raise UpdateFailed("invalid_auth") from exception
+        except TooManyRequestsException as exception:
+            raise UpdateFailed("too_many_requests") from exception
         except (ServerDisconnectedError, NotAuthenticatedException):
             self.executions = {}
             self.set_refresh_in_progress(False)
@@ -70,11 +70,16 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
             return self.devices
         except Exception as exception:
             _LOGGER.debug(exception)
-            raise UpdateFailed(exception)
+            raise UpdateFailed(exception) from exception
 
         for event in events:
             _LOGGER.debug(
-                f"{event.name}/{event.exec_id} (device:{event.deviceurl},state:{event.old_state}->{event.new_state})"
+                "%s/%s (device: %s, state: %s -> %s)",
+                event.name,
+                event.exec_id,
+                event.deviceurl,
+                event.old_state,
+                event.new_state,
             )
 
             if event.name == EventName.DEVICE_AVAILABLE:
