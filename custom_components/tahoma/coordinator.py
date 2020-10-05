@@ -6,7 +6,11 @@ from typing import Dict, List, Optional, Union
 from aiohttp import ServerDisconnectedError
 from pyhoma.client import TahomaClient
 from pyhoma.enums import EventName, ExecutionState
-from pyhoma.exceptions import NotAuthenticatedException
+from pyhoma.exceptions import (
+    BadCredentialsException,
+    NotAuthenticatedException,
+    TooManyRequestsException,
+)
 from pyhoma.models import DataType, Device, State
 
 from homeassistant.core import HomeAssistant
@@ -54,14 +58,18 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch TaHoma data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except (ServerDisconnectedError, NotAuthenticatedException) as exception:
-            _LOGGER.debug(exception)
+        except BadCredentialsException:
+            raise UpdateFailed("invalid_auth")
+        except TooManyRequestsException:
+            raise UpdateFailed("too_many_requests")
+        except (ServerDisconnectedError, NotAuthenticatedException):
             self.executions = {}
             self.set_refresh_in_progress(False)
             await self.client.login()
             self.devices = await self._get_devices()
             return self.devices
         except Exception as exception:
+            _LOGGER.debug(exception)
             raise UpdateFailed(exception)
 
         for event in events:
