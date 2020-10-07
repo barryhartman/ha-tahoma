@@ -54,6 +54,10 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
         self.executions: Dict[str, Dict[str, str]] = {}
         self.refresh_in_progress = False
 
+        _LOGGER.debug(
+            "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
+        )
+
     async def _async_update_data(self) -> Dict[str, Device]:
         """Fetch TaHoma data via event listener."""
         try:
@@ -62,7 +66,8 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("invalid_auth") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("too_many_requests") from exception
-        except (ServerDisconnectedError, NotAuthenticatedException):
+        except (ServerDisconnectedError, NotAuthenticatedException) as exception:
+            _LOGGER.debug(exception)
             self.executions = {}
             self.set_refresh_in_progress(False)
             await self.client.login()
@@ -131,6 +136,7 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_devices(self) -> Dict[str, Device]:
         """Fetch devices."""
+        _LOGGER.debug("Fetching all devices and state via /setup/devices")
         return {d.deviceurl: d for d in await self.client.get_devices(refresh=True)}
 
     def set_refresh_in_progress(self, state: bool) -> None:
