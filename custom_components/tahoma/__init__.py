@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import timedelta
 import logging
 
-from aiohttp import CookieJar, ClientError, ServerDisconnectedError
+from aiohttp import ClientError, CookieJar, ServerDisconnectedError
 from pyhoma.client import TahomaClient
 from pyhoma.exceptions import BadCredentialsException, TooManyRequestsException
 from pyhoma.models import Command
