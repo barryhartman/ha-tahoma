@@ -4,18 +4,18 @@ import logging
 from typing import Dict, List, Optional, Union
 
 from aiohttp import ServerDisconnectedError
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pyhoma.client import TahomaClient
 from pyhoma.enums import EventName, ExecutionState
 from pyhoma.exceptions import (
     BadCredentialsException,
+    MaintenanceException,
     NotAuthenticatedException,
     TooManyRequestsException,
 )
 from pyhoma.models import DataType, Device, State
-
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 TYPES = {
     DataType.NONE: None,
@@ -44,7 +44,10 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
     ):
         """Initialize global data updater."""
         super().__init__(
-            hass, logger, name=name, update_interval=update_interval,
+            hass,
+            logger,
+            name=name,
+            update_interval=update_interval,
         )
 
         self.data = {}
@@ -58,6 +61,10 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
             "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
         )
 
+        _LOGGER.debug(
+            "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
+        )
+
     async def _async_update_data(self) -> Dict[str, Device]:
         """Fetch TaHoma data via event listener."""
         try:
@@ -66,6 +73,8 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("invalid_auth") from exception
         except TooManyRequestsException as exception:
             raise UpdateFailed("too_many_requests") from exception
+        except MaintenanceException as exception:
+            raise UpdateFailed("server_in_maintenance") from exception
         except (ServerDisconnectedError, NotAuthenticatedException) as exception:
             _LOGGER.debug(exception)
             self.executions = {}
